@@ -29,8 +29,8 @@ python scripts/collect_demos.py --path path/to/save/ --config path/to/robot/conf
 
 If the oculus isn't working due to adb permissions, run the following:
 ```
-sudo adb kill-server
-sudo adb start-server
+adb kill-server
+adb start-server
 ```
 
 ## NUC Setup
