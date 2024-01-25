@@ -3,6 +3,7 @@ from typing import Dict, Optional, Type, Union
 
 import gym
 import numpy as np
+import cv2
 
 import robots
 from robots.controllers.controller import Controller, DummyController
@@ -39,6 +40,7 @@ class RobotEnv(gym.Env):
         channels_first: bool = True,
         horizon: Optional[int] = 500,
         normalize_actions: bool = True,
+        show_camera: bool = True,
     ):
         self.random_init = random_init
         controller_class = vars(robots)[controller_class] if isinstance(controller_class, str) else controller_class
@@ -77,6 +79,8 @@ class RobotEnv(gym.Env):
         self.channels_first = channels_first
         self._steps = 0
 
+        self.show_camera = show_camera
+
     def _get_obs(self):
         obs = dict(state=self.controller.get_state())
         for name, camera in self.cameras.items():
@@ -84,6 +88,21 @@ class RobotEnv(gym.Env):
             if self.channels_first:
                 frames = {k: v.transpose(2, 0, 1) for k, v in frames.items()}
             obs.update({name + "_" + k: v for k, v in frames.items()})
+
+        if self.show_camera:
+            # print("showing camera")
+            images = []
+            for k in self.cameras:
+                # print(list(obs.keys()))
+                np_image = obs[f"{k}_image"]
+                # print(k, np_image.shape)
+                # np_image = v.cpu().permute([1, 2, 0]).numpy()
+#                images.append(np_image)
+#            image = np.hstack(images)
+#            image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+#            cv2.imshow("img", image)
+#            cv2.waitKey(1)
+
         return obs
 
     def step(self, action):

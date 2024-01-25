@@ -121,17 +121,28 @@ def save_episode(data: Dict, path: str, enforce_length: bool = True) -> None:
             f.write(bs.read())
 
 
+def remove_last_n(nested, n):
+    for k, v in nested.items():
+        if isinstance(v, dict):
+            nested[k] = remove_last_n(v, n)
+        else:
+            assert isinstance(v, list)
+            nested[k] = v[: -n]
+
+    return nested
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--path", type=str, required=True, help="Path to save demonstrations.")
     parser.add_argument("--config", type=str, required=True, help="Path to config file.")
-    parser.add_argument("--instr", type=str, default=None, help="Language instruction.")
-    parser.add_argument(
-        "--format",
-        choices=["lightning", "bc", "rl"],
-        default="lightning",
-        help="How to format the demos for saving.",
-    )
+    # parser.add_argument("--instr", type=str, default=None, help="Language instruction.")
+    # parser.add_argument(
+    #     "--format",
+    #     choices=["lightning", "bc", "rl"],
+    #     default="lightning",
+    #     help="How to format the demos for saving.",
+    # )
     parser.add_argument(
         "--vr-kwargs",
         metavar="KEY=VALUE",
@@ -173,20 +184,20 @@ if __name__ == "__main__":
     while True:
         done = False
 
-        if args.format == "lightning":
-            episode = dict(
-                action=[np.zeros_like(env.action_space.sample())],
-                reward=[0.0],
-                done=[False],
-                discount=[1.0],
-            )
-        else:
-            episode = dict(
-                action=[],
-                reward=[],
-                done=[],
-                discount=[],
-            )
+        # if args.format == "lightning":
+        #     episode = dict(
+        #         action=[np.zeros_like(env.action_space.sample())],
+        #         reward=[0.0],
+        #         done=[False],
+        #         discount=[1.0],
+        #     )
+        # else:
+        episode = dict(
+            action=[],
+            reward=[],
+            done=[],
+            discount=[],
+        )
         episode["obs"] = nest_dict({k: [] for k in flatten_dict(env.observation_space).keys()})
 
         # Reset the environment
@@ -197,10 +208,10 @@ if __name__ == "__main__":
         append(episode, dict(obs=obs))
 
         # See if we want to use language.
-        lang = args.instr if args.instr is not None else input("[robots] Language instruction? ")
-        lang = None if lang == "" else lang
-        if lang is not None:
-            episode["language_instruction"] = [lang]
+        # lang = args.instr if args.instr is not None else input("[robots] Language instruction? ")
+        # lang = None if lang == "" else lang
+        # if lang is not None:
+        #     episode["language_instruction"] = [lang]
 
         print("[robots] Start episode.")
         while not done:
@@ -216,21 +227,23 @@ if __name__ == "__main__":
 
                 discount = 1.0 - float(terminated)
                 step = dict(obs=obs, action=action, reward=reward, done=done, discount=discount)
-                if lang is not None:
-                    step["language_instruction"] = lang
+                # if lang is not None:
+                #     step["language_instruction"] = lang
                 append(episode, step)
 
             controller_info = vr.get_info()
-            done = done or controller_info["user_set_success"] or controller_info["user_set_failure"]
+
+            done = done
+            if controller_info["user_set_success"] or controller_info["user_set_failure"]:
+                done = True
 
         print("[robots] Finished episode.")
         # Store done and reward at the final timestep
         episode["done"][-1] = True
         episode["reward"][-1] = 1.0
 
-        if args.format == "bc":
-            # Remove the final observation
-            episode["obs"] = episode["obs"][:-1]
+        # Remove the final observation
+        episode["obs"] = remove_last_n(episode["obs"], 1)
 
         if controller_info["user_set_success"]:
             print("[robots] Saving episode.")
@@ -238,14 +251,16 @@ if __name__ == "__main__":
             num_episodes += 1
             ts = datetime.datetime.now().strftime("%Y%m%dT%H%M%S")
             ep_filename = f"{ts}_{num_episodes}_{ep_len}.npz"
-            save_episode(episode, os.path.join(args.path, ep_filename), enforce_length=(args.format != "rl"))
+            save_episode(episode, os.path.join(args.path, ep_filename), enforce_length=True)
         else:
             print("[robots] Discarding episode.")
 
         to_break = input("[robots] Quit (q)? ")
-        if to_break == "q":
+        print(f"<><>{to_break}<><>")
+        if to_break.strip() == "q":
             break
 
+    print("closing?")
     env.close()
     del env
     del vr

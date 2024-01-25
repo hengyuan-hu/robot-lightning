@@ -48,17 +48,17 @@ class OpenCVCamera(Camera):
     def cap(self):
         assert IMPORTED_CV2, "cv2 not imported."
         if self._cap is None:
-            self._cap = cv2.VideoCapture(self.id)
+            self._cap = cv2.VideoCapture(self.id)  # type: ignore
             # Values other than default 640x480 have not been tested yet
-            self._cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.height)
-            self._cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.width)
+            self._cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+            self._cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
         return self._cap
 
     def get_frames(self):
-        retval, image = self.cap.read()
+        _, image = self.cap.read()
         image = cv2.resize(image, (self.width, self.height), interpolation=cv2.INTER_AREA)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        return dict(image=image)
+        return {"image": image}
 
     def close(self):
         self.cap.release()

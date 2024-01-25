@@ -86,7 +86,7 @@ class ZeroRPCClient(Controller):
         """
         Reset the robot to HOME, randomize if asked for.
         """
-        self.client.reset(randomize=randomize)
+        self.client.reset(randomize)
 
 
 class ZeroRPCServer(Controller):

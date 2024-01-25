@@ -107,6 +107,11 @@ class PolyMetisController(Controller):
         """
         Updates the robot controller with the action
         """
+        if not self._robot.is_running_policy():
+            print("restarting cartesian impedance controller")
+            self._robot.start_cartesian_impedance()
+            time.sleep(0.5)
+
         action = np.clip(action, self.action_space.low, self.action_space.high)
         robot_action, gripper_action = action[:-1], action[-1]
 
