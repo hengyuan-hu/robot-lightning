@@ -22,7 +22,28 @@ class PolyMetisController(Controller):
     EE_HIGH = np.array([1.0, 0.4, 1.0, np.pi, np.pi, np.pi], dtype=np.float32)  # np.pi at end
     JOINT_LOW = np.array([-2.7437, -1.7837, -2.9007, -3.0421, -2.8065, 0.5445, -3.0159], dtype=np.float32)
     JOINT_HIGH = np.array([2.7437, 1.7837, 2.9007, -0.1518, 2.8065, 4.5169, 3.0159], dtype=np.float32)
-    HOME = np.array([0.0, -np.pi / 4.0, 0.0, -3.0 * np.pi / 4.0, 0.0, np.pi / 2.0, 0], dtype=np.float32)
+
+    # home position for lift & towel
+    HOME = np.array([
+        np.pi * 0.0, # 1st joint (from base), horizontal, negative: rotate clockwise
+        np.pi * 0.0, # 2nd joint, vertical, negative: go up, positive: go down
+        np.pi * 0.0, # 3rd joint, horizontal,
+        -(3.0 / 4.0) * np.pi,
+        0.0,
+        0.75 * np.pi,  # 6th, smaller -> inward
+        np.pi* 0.0, # np.pi * 0.5,  # control the rotation of the gripper
+    ], dtype=np.float32)
+
+    # # home position for drawer & hang
+    # HOME = np.array([
+    #     0.0,
+    #     -0.15 * np.pi,
+    #     0.0,
+    #     -0.75 * np.pi,
+    #     0.0,
+    #     0.60 * np.pi,
+    #     0
+    # ], dtype=np.float32)
 
     def __init__(
         self, ip_address: str = "localhost", controller_type: str = "CARTESIAN_DELTA", max_delta: float = 0.05

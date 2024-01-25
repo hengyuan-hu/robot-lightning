@@ -95,6 +95,7 @@ class ZeroRPCServer(Controller):
         controller_kwargs = dict() if controller_kwargs is None else controller_kwargs
         self.controller = controller_class(**controller_kwargs)
         self.randomize = randomize
+        self.controller.reset(self.randomize)
 
     @property
     def observation_space(self):
