@@ -26,11 +26,11 @@ class PolyMetisController(Controller):
     # home position for lift & towel
     HOME = np.array([
         np.pi * 0.0, # 1st joint (from base), horizontal, negative: rotate clockwise
-        np.pi * 0.0, # 2nd joint, vertical, negative: go up, positive: go down
+        np.pi * 0.05, # 2nd joint, vertical, negative: go up, positive: go down
         np.pi * 0.0, # 3rd joint, horizontal,
         -(3.0 / 4.0) * np.pi,
         0.0,
-        0.75 * np.pi,  # 6th, smaller -> inward
+        0.8 * np.pi,  # 6th, smaller -> inward
         np.pi* 0.0, # np.pi * 0.5,  # control the rotation of the gripper
     ], dtype=np.float32)
 
