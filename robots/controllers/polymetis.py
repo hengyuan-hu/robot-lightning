@@ -184,7 +184,7 @@ class PolyMetisController(Controller):
     def reset(self, randomize: bool = True):
         if self.robot.is_running_policy():
             self.robot.terminate_current_policy()
-        self.update_gripper(0, blocking=True)  # Close the gripper
+        self.update_gripper(1, blocking=True)  # Close the gripper
         self.robot.go_home(time_to_go=10.0, timeout=20, blocking=True)
         if randomize:
             # Get the current position and then add some noise to it

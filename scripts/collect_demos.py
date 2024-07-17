@@ -171,6 +171,7 @@ if __name__ == "__main__":
             args.config, config_save_path
         ), "Trying to add more demos to a folder with a different config."
 
+    print("[robots] Initializing environment.")
     env = robots.RobotEnv(**config)
     vr = robots.VRController(**vr_kwargs)
 
@@ -179,6 +180,15 @@ if __name__ == "__main__":
     shutil.copy(args.config, os.path.join(args.path, "config.yaml"))
 
     print("[robots] Starting data collection.")
+    env.update_gripper(open=True)
+    print("[robots] Please put the object in the robot's gripper. Press r when ready.")
+    while True:
+        ready = input("[robots] Ready (r)? ")
+        if ready.strip() == "r":
+            break
+
+    # close the gripper
+    env.update_gripper(open=False)
 
     num_episodes = 0
     while True:
