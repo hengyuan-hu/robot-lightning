@@ -174,21 +174,32 @@ if __name__ == "__main__":
     print("[robots] Initializing environment.")
     env = robots.RobotEnv(**config)
     vr = robots.VRController(**vr_kwargs)
+    if NEW_GYM_API:
+        obs, info = env.reset()
+    else:
+        obs = env.reset()
 
     os.makedirs(args.path, exist_ok=True)
     # Copy the config to the demo storage location.
     shutil.copy(args.config, os.path.join(args.path, "config.yaml"))
 
     print("[robots] Starting data collection.")
-    env.update_gripper(open=True)
-    print("[robots] Please put the object in the robot's gripper. Press r when ready.")
-    while True:
-        ready = input("[robots] Ready (r)? ")
-        if ready.strip() == "r":
-            break
+    redo = True
+    while redo:
+        env.update_gripper(open=True)
+        print("[robots] Please put the object in the robot's gripper. Press r when ready.")
+        while True:
+            ready = input("[robots] Ready (r)? ")
+            if ready.strip() == "r":
+                break
 
-    # close the gripper
-    env.update_gripper(open=False)
+        # close the gripper
+        env.update_gripper(open=False)
+
+        redo = input("[robots] Redo (y/n)? ")
+        if redo.strip() == "n":
+            redo = False
+
 
     num_episodes = 0
     while True:
@@ -228,6 +239,13 @@ if __name__ == "__main__":
             action = vr.predict(obs)
 
             if action is not None:
+
+                # gripper should always be closed
+                action[-1] = 1.0
+
+                # do not rotate the gripper
+                action[3:5] = 0.0
+                
                 # If we have an action from VR, step the environment
                 if NEW_GYM_API:
                     obs, reward, done, terminated, info = env.step(action)
