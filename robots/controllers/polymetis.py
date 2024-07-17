@@ -2,6 +2,7 @@ from functools import cached_property
 
 import gym
 import numpy as np
+import time
 
 from .controller import Controller
 

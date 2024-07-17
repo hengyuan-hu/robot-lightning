@@ -42,7 +42,6 @@ class RobotEnv(gym.Env):
         normalize_actions: bool = True,
         show_camera: bool = True,
     ):
-        print("****RobotEnv initializing****")
         self.random_init = random_init
         controller_class = vars(robots)[controller_class] if isinstance(controller_class, str) else controller_class
         self.controller = controller_class(**({} if controller_kwargs is None else controller_kwargs))
@@ -81,8 +80,6 @@ class RobotEnv(gym.Env):
         self._steps = 0
 
         self.show_camera = show_camera
-
-        print("****RobotEnv initialized****")
 
     def _get_obs(self):
         obs = dict(state=self.controller.get_state())
@@ -134,10 +131,11 @@ class RobotEnv(gym.Env):
             return self._get_obs(), 0, terminated, info
 
     def update_gripper(self, open=True):
+        self._get_obs()
         if open:
-            action = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0], dtype=np.float32)
+            action = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.68], dtype=np.float32)
         else:
-            action = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], dtype=np.float32)
+            action = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0], dtype=np.float32)
         self.controller.update(action)
         time.sleep(0.5)
 
