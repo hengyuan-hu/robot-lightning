@@ -153,10 +153,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     vr_kwargs = dict(
-        pos_action_gain=3.0,
-        rot_action_gain=1.0,
+        pos_action_gain=1.0,
+        rot_action_gain=0.25,
         gripper_action_gain=1.0,
-        min_magnitude=0.15,
+        min_magnitude=0.05,
         robot_orientation="right",
     )
     vr_kwargs.update(parse_vars(args.vr_kwargs))
@@ -184,8 +184,10 @@ if __name__ == "__main__":
     shutil.copy(args.config, os.path.join(args.path, "config.yaml"))
 
     print("[robots] Starting data collection.")
-    redo = True
-    while redo:
+    while True:
+        redo = input("[robots] object in gripper? (y/n) ")
+        if redo.strip() == "y":
+            break
         env.update_gripper(open=True)
         print("[robots] Please put the object in the robot's gripper. Press r when ready.")
         while True:
@@ -195,10 +197,6 @@ if __name__ == "__main__":
 
         # close the gripper
         env.update_gripper(open=False)
-
-        redo = input("[robots] Redo (y/n)? ")
-        if redo.strip() == "n":
-            redo = False
 
 
     num_episodes = 0
@@ -242,9 +240,6 @@ if __name__ == "__main__":
 
                 # gripper should always be closed
                 action[-1] = 1.0
-
-                # do not rotate the gripper
-                action[3:5] = 0.0
                 
                 # If we have an action from VR, step the environment
                 if NEW_GYM_API:
