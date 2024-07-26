@@ -1,6 +1,9 @@
 from . import cameras
 from .robot import RobotEnv
-from .spacemouse import SpaceMouseInterface
+try:
+    from .spacemouse import SpaceMouseInterface
+except ImportError:
+    print("[robots] SpaceMouseInterface not loaded. Likely missing spacemouse driver.")
 
 try:
     from .controllers.remote import ZeroRPCClient, ZeroRPCServer
