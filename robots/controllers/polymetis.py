@@ -24,15 +24,17 @@ class PolyMetisController(Controller):
     JOINT_LOW = np.array([-2.7437, -1.7837, -2.9007, -3.0421, -2.8065, 0.5445, -3.0159], dtype=np.float32)
     JOINT_HIGH = np.array([2.7437, 1.7837, 2.9007, -0.1518, 2.8065, 4.5169, 3.0159], dtype=np.float32)
 
-    # home position for lift & towel
+    # home position for pcb
     HOME = np.array([
         np.pi * 0.0, # 1st joint (from base), horizontal, negative: rotate clockwise
-        np.pi * 0.05, # 2nd joint, vertical, negative: go up, positive: go down
+        np.pi * 0.0, # 2nd joint, vertical, negative: go up, positive: go down
         np.pi * 0.0, # 3rd joint, horizontal,
         -(3.0 / 4.0) * np.pi,
         0.0,
-        0.8 * np.pi,  # 6th, smaller -> inward
+        0.775 * np.pi,  # 6th, smaller -> inward
         np.pi* 0.0, # np.pi * 0.5,  # control the rotation of the gripper
+        # 0.75 * np.pi,  # 6th, smaller -> inward
+        # np.pi* -0.5, # np.pi * 0.5,  # control the rotation of the gripper
     ], dtype=np.float32)
 
     # # home position for drawer & hang
@@ -185,7 +187,7 @@ class PolyMetisController(Controller):
     def reset(self, randomize: bool = True):
         if self.robot.is_running_policy():
             self.robot.terminate_current_policy()
-        self.update_gripper(1, blocking=True)  # Close the gripper
+        self.update_gripper(1.0, blocking=True)  # Close the gripper
         self.robot.go_home(time_to_go=10.0, timeout=20, blocking=True)
         if randomize:
             # Get the current position and then add some noise to it

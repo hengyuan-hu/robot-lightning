@@ -153,11 +153,11 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     vr_kwargs = dict(
-        pos_action_gain=1.0,
-        rot_action_gain=0.25,
+        pos_action_gain=3.0,
+        rot_action_gain=1.0,
         gripper_action_gain=1.0,
-        min_magnitude=0.05,
-        robot_orientation="right",
+        min_magnitude=0.15,
+        robot_orientation="left",
     )
     vr_kwargs.update(parse_vars(args.vr_kwargs))
 
@@ -171,13 +171,17 @@ if __name__ == "__main__":
             args.config, config_save_path
         ), "Trying to add more demos to a folder with a different config."
 
-    print("[robots] Initializing environment.")
     env = robots.RobotEnv(**config)
-    vr = robots.VRController(**vr_kwargs)
+    # vr = robots.VRController(**vr_kwargs)
+    interface = robots.SpaceMouseInterface()
+    interface.start_control()
+
     if NEW_GYM_API:
         obs, info = env.reset()
     else:
         obs = env.reset()
+
+    print("[robots] position reseted")
 
     os.makedirs(args.path, exist_ok=True)
     # Copy the config to the demo storage location.
@@ -233,13 +237,21 @@ if __name__ == "__main__":
         #     episode["language_instruction"] = [lang]
 
         print("[robots] Start episode.")
+        length = 0
         while not done:
-            action = vr.predict(obs)
+            # action = vr.predict(obs)
+            action, save, discard = interface.get_action()
 
-            if action is not None:
-
+            # if action is not none and action norm is more than 0.01, set action to none
+            if action is not None and np.linalg.norm(action) > 0.02:
+                
                 # gripper should always be closed
-                action[-1] = 1.0
+                action = action * 3.0
+                action[2] += 0.15
+                action = np.append(action, 1.0)
+
+                print(f"[robots] Step {length} Action: {action}")
+
                 
                 # If we have an action from VR, step the environment
                 if NEW_GYM_API:
@@ -248,17 +260,20 @@ if __name__ == "__main__":
                     obs, reward, done, info = env.step(action)
                     terminated = False
 
+                print(f"[robots] Step {length} zpos: {obs['state']['ee_pos'][2]}")
+
                 discount = 1.0 - float(terminated)
                 step = dict(obs=obs, action=action, reward=reward, done=done, discount=discount)
                 # if lang is not None:
                 #     step["language_instruction"] = lang
                 append(episode, step)
+                length += 1
 
-            controller_info = vr.get_info()
+            # controller_info = vr.get_info()
 
-            done = done
-            if controller_info["user_set_success"] or controller_info["user_set_failure"]:
-                done = True
+            done = save or discard
+            # if controller_info["user_set_success"] or controller_info["user_set_failure"]:
+            #     done = True
 
         print("[robots] Finished episode.")
         # Store done and reward at the final timestep
@@ -268,7 +283,8 @@ if __name__ == "__main__":
         # Remove the final observation
         episode["obs"] = remove_last_n(episode["obs"], 1)
 
-        if controller_info["user_set_success"]:
+        # if controller_info["user_set_success"]:
+        if save:
             print("[robots] Saving episode.")
             ep_len = len(episode["done"])
             num_episodes += 1
@@ -286,5 +302,5 @@ if __name__ == "__main__":
     print("closing?")
     env.close()
     del env
-    del vr
+    del interface
     exit()

@@ -1,5 +1,6 @@
 from . import cameras
 from .robot import RobotEnv
+from .spacemouse import SpaceMouseInterface
 
 try:
     from .controllers.remote import ZeroRPCClient, ZeroRPCServer
